@@ -1,0 +1,29 @@
+# --- Secrets (never commit these) ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- Private data (your documents and the database files) ---
+uploads/
+data/
+pgdata/
+*.dump
+
+# --- Our personal working notes ---
+context/
+handoff-*.md
+
+# --- Editor and OS files ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
