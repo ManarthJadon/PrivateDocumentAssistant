@@ -1,0 +1,26 @@
+[project]
+name = "private-document-assistant"
+version = "0.1.0"
+description = "A fully local assistant that answers questions about your own documents, with sources."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "python-multipart",
+    "psycopg[binary]",
+    "pgvector",
+    "pypdf",
+    "python-docx",
+    "httpx",
+    "python-dotenv",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
