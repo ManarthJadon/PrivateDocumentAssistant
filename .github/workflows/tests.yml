@@ -8,6 +8,26 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: docassistant
+          POSTGRES_DB: docassistant_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - "5433:5432"
+        options: >-
+          --health-cmd "pg_isready -U docassistant"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5433"
+      POSTGRES_USER: docassistant
+
     steps:
       - name: Get the code
         uses: actions/checkout@v7
