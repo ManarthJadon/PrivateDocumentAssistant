@@ -23,13 +23,19 @@ Browser (HTML/CSS/JS) -> FastAPI app -> Ollama on Windows (localhost:11434)
                     Postgres + pgvector (Docker, 127.0.0.1:5433)
 ```
 
+The app listens only on `127.0.0.1` (this computer), never on all network
+interfaces, so no other device on the same Wi-Fi can open it. In Docker (Phase 5)
+the app port is published as `127.0.0.1:<port>` too.
+
 | File | Job |
 |---|---|
+| `app/config.py` | Settings read from `.env` (database URL, Ollama URL, model names, uploads folder) |
 | `app/main.py` | Web routes: workspaces, upload, ask, list, delete |
 | `app/db.py` | All SQL (plain SQL with psycopg, no ORM) |
 | `app/reader.py` | Read text from .pdf / .docx / .txt / .md |
 | `app/chunker.py` | Split text into chunks |
 | `app/ollama_client.py` | Embed and answer via Ollama |
+| `app/ingest.py` | Add a document: read, chunk, embed, save file, one transaction, roll back on failure |
 | `app/rag.py` | Retrieve chunks, build prompt, parse answer and sources |
 | `app/static/` | Web page |
 
