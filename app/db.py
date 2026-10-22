@@ -1,6 +1,9 @@
 import psycopg
+from pgvector import Vector
 from pgvector.psycopg import register_vector
 from psycopg.rows import dict_row
+
+from app.chunker import Chunk
 
 
 class NotFound(Exception):
@@ -78,3 +81,46 @@ def get_workspace(conn: psycopg.Connection, workspace_id: int) -> dict | None:
     return conn.execute(
         "SELECT id, name FROM workspaces WHERE id = %s", (workspace_id,)
     ).fetchone()
+
+
+# --- documents ---
+
+def document_exists(conn: psycopg.Connection, workspace_id: int, filename: str) -> bool:
+    row = conn.execute(
+        "SELECT EXISTS (SELECT 1 FROM documents WHERE workspace_id = %s AND filename = %s) AS found",
+        (workspace_id, filename),
+    ).fetchone()
+    return row["found"]
+
+
+def insert_document(
+    conn: psycopg.Connection, workspace_id: int, filename: str, stored_path: str, page_count: int
+) -> int:
+    row = conn.execute(
+        "INSERT INTO documents (workspace_id, filename, stored_path, page_count)"
+        " VALUES (%s, %s, %s, %s) RETURNING id",
+        (workspace_id, filename, stored_path, page_count),
+    ).fetchone()
+    return row["id"]
+
+
+def insert_chunks(
+    conn: psycopg.Connection, document_id: int, chunks: list[Chunk], embeddings: list[list[float]]
+) -> None:
+    rows = [
+        (document_id, chunk.page, chunk.text, Vector(embedding))
+        for chunk, embedding in zip(chunks, embeddings, strict=True)
+    ]
+    with conn.cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO chunks (document_id, page, text, embedding) VALUES (%s, %s, %s, %s)",
+            rows,
+        )
+
+
+def list_documents(conn: psycopg.Connection, workspace_id: int) -> list[dict]:
+    return conn.execute(
+        "SELECT id, filename, page_count, created_at FROM documents"
+        " WHERE workspace_id = %s ORDER BY lower(filename)",
+        (workspace_id,),
+    ).fetchall()
