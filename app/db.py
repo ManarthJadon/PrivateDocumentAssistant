@@ -124,3 +124,29 @@ def list_documents(conn: psycopg.Connection, workspace_id: int) -> list[dict]:
         " WHERE workspace_id = %s ORDER BY lower(filename)",
         (workspace_id,),
     ).fetchall()
+
+
+# --- searching ---
+
+def count_chunks(conn: psycopg.Connection, workspace_id: int) -> int:
+    row = conn.execute(
+        "SELECT count(*) AS n FROM chunks c"
+        " JOIN documents d ON d.id = c.document_id"
+        " WHERE d.workspace_id = %s",
+        (workspace_id,),
+    ).fetchone()
+    return row["n"]
+
+
+def search_chunks(
+    conn: psycopg.Connection, workspace_id: int, embedding: list[float], limit: int
+) -> list[dict]:
+    # Exact search: measure the distance from the question to every chunk
+    # in this workspace and keep the closest ones (0 = same meaning).
+    return conn.execute(
+        "SELECT d.filename, c.page, c.text, c.embedding <=> %s AS distance"
+        " FROM chunks c JOIN documents d ON d.id = c.document_id"
+        " WHERE d.workspace_id = %s"
+        " ORDER BY distance LIMIT %s",
+        (Vector(embedding), workspace_id, limit),
+    ).fetchall()
