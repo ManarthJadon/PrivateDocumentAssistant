@@ -75,6 +75,29 @@ def test_404_raises_model_missing():
     assert str(caught.value) == "Model nomic-embed-text not found. Run: ollama pull nomic-embed-text"
 
 
+# --- chat ---
+
+def test_chat_sends_num_ctx_and_temperature():
+    requests = []
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        reply = {"message": {"role": "assistant", "content": "Apples are red [1]."}}
+        return httpx.Response(200, json=reply)
+
+    answer = make_client(handler).chat("Only use the excerpts.", "What colour are apples?")
+
+    body = requests[0]
+    assert body["model"] == "llama3.1:8b"
+    assert body["stream"] is False
+    assert body["options"] == {"num_ctx": 8192, "temperature": 0.1}
+    assert body["messages"] == [
+        {"role": "system", "content": "Only use the excerpts."},
+        {"role": "user", "content": "What colour are apples?"},
+    ]
+    assert answer == "Apples are red [1]."
+
+
 # --- the fake Ollama used by later tests ---
 
 def cosine_distance(a: list[float], b: list[float]) -> float:
