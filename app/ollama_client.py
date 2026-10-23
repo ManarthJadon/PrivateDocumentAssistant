@@ -1,6 +1,8 @@
 import httpx
 
 EMBED_BATCH = 32  # how many texts we send to Ollama in one request
+NUM_CTX = 8192  # how much text the chat model can look at once (its "desk")
+TEMPERATURE = 0.1  # low = steady, factual answers
 
 
 # --- friendly errors (their text is shown to the user) ---
@@ -36,7 +38,7 @@ class OllamaClient:
         transport: httpx.BaseTransport | None = None,
     ):
         self.embed_model = embed_model
-        self.chat_model = chat_model  # used for answers in Task 7
+        self.chat_model = chat_model
         # transport is only set by tests, to swap the real network for a pretend one.
         self.http = httpx.Client(base_url=base_url, timeout=timeout, transport=transport)
 
@@ -49,6 +51,21 @@ class OllamaClient:
 
     def embed_query(self, text: str) -> list[float]:
         return self._embed(["search_query: " + text])[0]
+
+    def chat(self, system: str, user: str) -> str:
+        data = self._post(
+            "/api/chat",
+            {
+                "model": self.chat_model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                "stream": False,
+                "options": {"num_ctx": NUM_CTX, "temperature": TEMPERATURE},
+            },
+        )
+        return data["message"]["content"]
 
     def _embed(self, inputs: list[str]) -> list[list[float]]:
         data = self._post("/api/embed", {"model": self.embed_model, "input": inputs})
