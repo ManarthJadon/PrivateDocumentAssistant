@@ -6,7 +6,7 @@ Ask questions about your own documents and get answers with sources. Everything 
 
 ## Status
 
-Work in progress (6 of 12 build steps done).
+Work in progress (7 of 12 build steps done).
 
 - [x] Settings from `.env`
 - [x] Reading PDF, Word (.docx), .txt and .md files
@@ -14,7 +14,7 @@ Work in progress (6 of 12 build steps done).
 - [x] Database tables and workspaces (PostgreSQL + pgvector)
 - [x] Embeddings with a local model (Ollama, `nomic-embed-text`)
 - [x] Adding a document, all-or-nothing (nothing half-saved if something fails)
-- [ ] Answering questions with numbered sources (`llama3.1:8b`)
+- [x] Answering questions with numbered sources (`llama3.1:8b`)
 - [ ] Deleting documents and workspaces
 - [ ] Web API (FastAPI)
 - [ ] Web page
@@ -27,13 +27,20 @@ Work in progress (6 of 12 build steps done).
 2. The app reads the text and cuts it into small overlapping chunks.
 3. A local model turns each chunk into an **embedding** (768 numbers that capture its meaning), stored in PostgreSQL with pgvector.
 4. You ask a question. The app finds the 5 chunks closest in meaning, in that workspace only.
-5. A local model answers using only those chunks and shows the file (and page, for PDFs) each part came from. If the answer isn't in your documents, it says so.
+5. A local model answers using only those chunks and cites them like [1] and [2], so you can see the file (and page, for PDFs) behind each fact.
+
+### When the answer isn't in your documents
+
+The app says "I couldn't find this in your documents." instead of guessing. Two checks make sure of that:
+
+- **Before the AI:** if even the closest chunk is far away in meaning, the model is never asked.
+- **The AI itself:** it's told to reply `NOT_FOUND` when the excerpts don't contain the answer.
 
 ## Stack
 
 - Python 3.14 + FastAPI
 - PostgreSQL 17 + pgvector, in Docker
-- Ollama on your own GPU: `nomic-embed-text` (embeddings), `llama3.1:8b` (answers)
+- Ollama on your own GPU: `nomic-embed-text` (embeddings), `llama3.1:8b` (answers; context 8192, temperature 0.1)
 - psycopg with plain SQL (no ORM), no LangChain
 - Plain HTML, CSS and JavaScript
 - pytest + GitHub Actions (tests run on every push, with a fake Ollama)
@@ -43,6 +50,7 @@ Work in progress (6 of 12 build steps done).
 - The app only listens on `127.0.0.1` (your own computer), so other devices can't reach it.
 - The database port is also only open to your own computer.
 - Uploaded files and the database stay on your disk and are never committed to git.
+- Text inside your documents is treated as data, never as instructions to the AI.
 
 ## Run the tests
 
@@ -63,8 +71,9 @@ The tests don't need Ollama. They use a fake one.
 | `app/config.py` | Reads settings from `.env` |
 | `app/reader.py` | Gets the text out of PDF, Word, .txt and .md files |
 | `app/chunker.py` | Cuts text into chunks |
-| `app/ollama_client.py` | Talks to Ollama (embeddings) |
-| `app/db.py` | All SQL: tables, workspaces, documents, chunks |
+| `app/ollama_client.py` | Talks to Ollama (embeddings and answers) |
+| `app/db.py` | All SQL: tables, workspaces, documents, chunks, search |
 | `app/ingest.py` | Adds a document: check, read, chunk, embed, save |
+| `app/rag.py` | Answers a question: search, prompt, read the reply, sources |
 | `tests/` | Unit and database tests, plus the fake Ollama |
 | `docs/` | Design spec and build plan |
