@@ -150,3 +150,30 @@ def search_chunks(
         " ORDER BY distance LIMIT %s",
         (Vector(embedding), workspace_id, limit),
     ).fetchall()
+
+
+# --- deleting ---
+
+def delete_document(conn: psycopg.Connection, document_id: int) -> str | None:
+    # Its chunks are deleted too (ON DELETE CASCADE).
+    row = conn.execute(
+        "DELETE FROM documents WHERE id = %s RETURNING stored_path", (document_id,)
+    ).fetchone()
+    return row["stored_path"] if row else None
+
+
+def delete_workspace(conn: psycopg.Connection, workspace_id: int) -> list[str] | None:
+    # Its documents and their chunks are deleted too (ON DELETE CASCADE).
+    with conn.transaction():
+        # FOR UPDATE locks the workspace row until we're done, so nobody can
+        # add a document to it in between (its file would never be deleted).
+        workspace = conn.execute(
+            "SELECT id FROM workspaces WHERE id = %s FOR UPDATE", (workspace_id,)
+        ).fetchone()
+        if workspace is None:
+            return None
+        rows = conn.execute(
+            "SELECT stored_path FROM documents WHERE workspace_id = %s", (workspace_id,)
+        ).fetchall()
+        conn.execute("DELETE FROM workspaces WHERE id = %s", (workspace_id,))
+    return [row["stored_path"] for row in rows]
