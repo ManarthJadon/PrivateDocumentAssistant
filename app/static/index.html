@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Private Document Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/app.js" defer></script>
+</head>
+<body>
+<header>
+    <h1>Private Document Assistant</h1>
+    <p>Your documents never leave this computer.</p>
+</header>
+
+<main>
+    <!-- 1. Choose, create or delete a workspace -->
+    <section>
+        <h2>Workspace</h2>
+        <div class="row">
+            <select id="workspace-select" aria-label="Workspace"></select>
+            <button id="delete-workspace" type="button" class="danger">Delete workspace</button>
+        </div>
+        <form id="new-workspace-form" class="row">
+            <input id="new-workspace-name" maxlength="100" placeholder="New workspace name"
+                   aria-label="New workspace name" required>
+            <button type="submit">New workspace</button>
+        </form>
+    </section>
+
+    <!-- 2. Upload documents and see the list -->
+    <section>
+        <h2>Documents</h2>
+        <form id="upload-form" class="row">
+            <input id="file-input" type="file" accept=".pdf,.docx,.txt,.md"
+                   aria-label="Choose a document" required>
+            <button type="submit">Upload</button>
+        </form>
+        <ul id="document-list"></ul>
+    </section>
+
+    <!-- 3. Ask a question and read the answer -->
+    <section>
+        <h2>Ask a question</h2>
+        <form id="ask-form">
+            <textarea id="question" maxlength="2000" rows="3"
+                      placeholder="For example: What colour are bananas?"
+                      aria-label="Your question" required></textarea>
+            <button type="submit">Ask</button>
+        </form>
+        <div id="answer" hidden>
+            <p id="answer-text"></p>
+            <h3 id="sources-title"></h3>
+            <div id="sources"></div>
+        </div>
+    </section>
+
+    <!-- Messages: "Processing..." and errors -->
+    <p id="status" role="status"></p>
+    <p id="error" role="alert"></p>
+</main>
+</body>
+</html>
