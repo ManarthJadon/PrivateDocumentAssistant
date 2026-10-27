@@ -5,7 +5,8 @@ from pathlib import Path, PureWindowsPath
 
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app import db
@@ -18,6 +19,7 @@ from app.reader import ReadError
 log = logging.getLogger("app")
 
 DB_DOWN = "Database isn't running. Run: docker compose up -d"
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 # --- starting up ---
@@ -177,3 +179,13 @@ def ask_question(workspace_id: int, body: QuestionIn, conn=Depends(get_conn), ol
     question = clean(body.question, 2000, "Please type a question (max 2000 characters).")
     answer = ask(conn, ollama, workspace_id, question)
     return {"answer": answer.text, "sources": answer.sources, "related": answer.related}
+
+
+# --- the web page ---
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse(STATIC_DIR / "index.html")
