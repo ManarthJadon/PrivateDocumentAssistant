@@ -173,3 +173,13 @@ def test_delete_workspace_removes_files(client, tmp_path):
 def test_delete_unknown_is_404(client):
     assert client.delete("/api/documents/999").status_code == 404
     assert client.delete("/api/workspaces/999").status_code == 404
+
+
+
+# --- web page ---
+
+def test_index_is_served(client):
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
