@@ -6,7 +6,7 @@ Ask questions about your own documents and get answers with sources. Everything 
 
 ## Status
 
-Work in progress (7 of 12 build steps done).
+Work in progress (9 of 12 build steps done).
 
 - [x] Settings from `.env`
 - [x] Reading PDF, Word (.docx), .txt and .md files
@@ -15,8 +15,8 @@ Work in progress (7 of 12 build steps done).
 - [x] Embeddings with a local model (Ollama, `nomic-embed-text`)
 - [x] Adding a document, all-or-nothing (nothing half-saved if something fails)
 - [x] Answering questions with numbered sources (`llama3.1:8b`)
-- [ ] Deleting documents and workspaces
-- [ ] Web API (FastAPI)
+- [x] Deleting documents and workspaces (their files too)
+- [x] Web API (FastAPI) with friendly error messages
 - [ ] Web page
 - [ ] Quality check (~20 test questions)
 - [ ] One-command Docker run, demo video
@@ -50,6 +50,7 @@ The app says "I couldn't find this in your documents." instead of guessing. Two 
 - The app only listens on `127.0.0.1` (your own computer), so other devices can't reach it.
 - The database port is also only open to your own computer.
 - Uploaded files and the database stay on your disk and are never committed to git.
+- Deleting a document or workspace also deletes its uploaded files.
 - Text inside your documents is treated as data, never as instructions to the AI.
 
 ## Run the tests
@@ -64,6 +65,14 @@ You need Python 3.14, [uv](https://docs.astral.sh/uv/) and Docker Desktop.
 
 The tests don't need Ollama. They use a fake one.
 
+## Try the API
+
+You need the steps above, plus [Ollama](https://ollama.com) with `nomic-embed-text` and `llama3.1:8b` pulled.
+
+1. Start the server: `.venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`
+2. Open http://127.0.0.1:8000/docs to try every route in the browser.
+3. Stop the server with Ctrl + C.
+
 ## Project layout
 
 | Path | What it does |
@@ -72,8 +81,9 @@ The tests don't need Ollama. They use a fake one.
 | `app/reader.py` | Gets the text out of PDF, Word, .txt and .md files |
 | `app/chunker.py` | Cuts text into chunks |
 | `app/ollama_client.py` | Talks to Ollama (embeddings and answers) |
-| `app/db.py` | All SQL: tables, workspaces, documents, chunks, search |
+| `app/db.py` | All SQL: tables, workspaces, documents, chunks, search, deleting |
 | `app/ingest.py` | Adds a document: check, read, chunk, embed, save |
 | `app/rag.py` | Answers a question: search, prompt, read the reply, sources |
-| `tests/` | Unit and database tests, plus the fake Ollama |
+| `app/main.py` | The web API: routes, uploads, friendly error messages |
+| `tests/` | Unit, database and API tests, plus the fake Ollama |
 | `docs/` | Design spec and build plan |
