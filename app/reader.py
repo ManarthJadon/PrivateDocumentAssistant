@@ -24,8 +24,10 @@ def read_document(filename: str, data: bytes) -> list[tuple[int | None, str]]:
             reader = pypdf.PdfReader(io.BytesIO(data))
             if reader.is_encrypted:
                 raise ValueError("locked PDF")
+            # "layout" rebuilds lines from where the words sit on the page.
+            # Plain reading put every word of Word-made PDFs on its own line.
             pages = [
-                (number, page.extract_text() or "")
+                (number, page.extract_text(extraction_mode="layout") or "")
                 for number, page in enumerate(reader.pages, start=1)
             ]
         elif suffix == ".docx":
