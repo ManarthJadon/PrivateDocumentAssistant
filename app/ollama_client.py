@@ -53,18 +53,20 @@ class OllamaClient:
         return self._embed(["search_query: " + text])[0]
 
     def chat(self, system: str, user: str) -> str:
-        data = self._post(
-            "/api/chat",
-            {
-                "model": self.chat_model,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                "stream": False,
-                "options": {"num_ctx": NUM_CTX, "temperature": TEMPERATURE},
-            },
-        )
+        body = {
+            "model": self.chat_model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "stream": False,
+            "options": {"num_ctx": NUM_CTX, "temperature": TEMPERATURE},
+        }
+        if self.chat_model.startswith("qwen3"):
+            # qwen3 "thinks out loud" before answering by default: much slower,
+            # and not needed to find a fact in 5 excerpts.
+            body["think"] = False
+        data = self._post("/api/chat", body)
         return data["message"]["content"]
 
     def _embed(self, inputs: list[str]) -> list[list[float]]:
