@@ -62,3 +62,9 @@ def test_chunk_pages_never_crosses_pages():
 
 def test_chunk_pages_keeps_none_page():
     assert chunk_pages([(None, "hi there")]) == [Chunk(None, "hi there")]
+
+
+def test_chunk_pages_size_can_change():
+    chunks = chunk_pages([(1, "word " * 1000)], size=500, overlap=50)
+    assert len(chunks) > 1
+    assert all(len(chunk.text) <= 500 for chunk in chunks)

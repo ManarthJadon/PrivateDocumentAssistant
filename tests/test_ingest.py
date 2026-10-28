@@ -40,6 +40,13 @@ def test_folder_parts_are_stripped(conn, workspace_id, tmp_path):
     assert names == ["evil.txt", "notes.txt"]
 
 
+def test_chunk_size_can_change(conn, workspace_id, tmp_path):
+    add_document(conn, FakeOllama(), tmp_path, workspace_id, "notes.txt", LONG_TEXT, chunk_size=500)
+
+    longest = conn.execute("SELECT max(length(text)) AS n FROM chunks").fetchone()["n"]
+    assert longest <= 500
+
+
 # --- refused early: nothing is embedded or saved ---
 
 def test_too_big_saves_nothing(conn, workspace_id, tmp_path):
