@@ -6,7 +6,7 @@ Ask questions about your own documents and get answers with sources. Everything 
 
 ## Status
 
-Work in progress (9 of 12 build steps done).
+Work in progress (10 of 12 build steps done).
 
 - [x] Settings from `.env`
 - [x] Reading PDF, Word (.docx), .txt and .md files
@@ -17,7 +17,7 @@ Work in progress (9 of 12 build steps done).
 - [x] Answering questions with numbered sources (`llama3.1:8b`)
 - [x] Deleting documents and workspaces (their files too)
 - [x] Web API (FastAPI) with friendly error messages
-- [ ] Web page
+- [x] Web page (plain HTML, CSS and JavaScript)
 - [ ] Quality check (~20 test questions)
 - [ ] One-command Docker run, demo video
 
@@ -52,6 +52,7 @@ The app says "I couldn't find this in your documents." instead of guessing. Two 
 - Uploaded files and the database stay on your disk and are never committed to git.
 - Deleting a document or workspace also deletes its uploaded files.
 - Text inside your documents is treated as data, never as instructions to the AI.
+- The page shows document text and answers as plain text only, so hidden code in a document can't run in your browser.
 
 ## Run the tests
 
@@ -65,12 +66,12 @@ You need Python 3.14, [uv](https://docs.astral.sh/uv/) and Docker Desktop.
 
 The tests don't need Ollama. They use a fake one.
 
-## Try the API
+## Run the app
 
 You need the steps above, plus [Ollama](https://ollama.com) with `nomic-embed-text` and `llama3.1:8b` pulled.
 
 1. Start the server: `.venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`
-2. Open http://127.0.0.1:8000/docs to try every route in the browser.
+2. Open http://127.0.0.1:8000 to use the app (or http://127.0.0.1:8000/docs to try the API routes directly).
 3. Stop the server with Ctrl + C.
 
 ## Project layout
@@ -84,6 +85,7 @@ You need the steps above, plus [Ollama](https://ollama.com) with `nomic-embed-te
 | `app/db.py` | All SQL: tables, workspaces, documents, chunks, search, deleting |
 | `app/ingest.py` | Adds a document: check, read, chunk, embed, save |
 | `app/rag.py` | Answers a question: search, prompt, read the reply, sources |
-| `app/main.py` | The web API: routes, uploads, friendly error messages |
+| `app/main.py` | The web API and the web page: routes, uploads, friendly error messages |
+| `app/static/` | The web page: `index.html` (structure), `style.css` (looks), `app.js` (buttons and API calls) |
 | `tests/` | Unit, database and API tests, plus the fake Ollama |
 | `docs/` | Design spec and build plan |
