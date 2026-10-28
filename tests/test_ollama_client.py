@@ -98,6 +98,22 @@ def test_chat_sends_num_ctx_and_temperature():
     assert answer == "Apples are red [1]."
 
 
+def test_chat_turns_thinking_off_for_qwen3():
+    requests = []
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json={"message": {"role": "assistant", "content": "Red [1]."}})
+
+    qwen = OllamaClient(
+        "http://ollama.test", "nomic-embed-text", "qwen3:8b", transport=httpx.MockTransport(handler)
+    )
+    qwen.chat("Only use the excerpts.", "What colour are apples?")
+    make_client(handler).chat("Only use the excerpts.", "What colour are apples?")  # llama3.1:8b
+
+    assert requests[0]["think"] is False  # qwen3: thinking switched off
+    assert "think" not in requests[1]     # llama: request unchanged
+
 # --- the fake Ollama used by later tests ---
 
 def cosine_distance(a: list[float], b: list[float]) -> float:
