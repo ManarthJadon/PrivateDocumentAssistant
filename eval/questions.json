@@ -1,0 +1,26 @@
+[
+  {"question": "How many days of paid annual leave do full-time employees get?", "expected_file": "employee_handbook.md", "expected_page": null, "answerable": true, "must_contain": ["27"]},
+  {"question": "Which days can I work from home?", "expected_file": "employee_handbook.md", "expected_page": null, "answerable": true, "must_contain": ["Tuesday"]},
+  {"question": "Where do we meet if the fire alarm goes off?", "expected_file": "employee_handbook.md", "expected_page": null, "answerable": true, "must_contain": ["bench"]},
+  {"question": "How big is the yearly training budget?", "expected_file": "employee_handbook.md", "expected_page": null, "answerable": true, "must_contain": ["1,200", "1200", "1.200"]},
+  {"question": "How long is the probation period for new employees?", "expected_file": "employee_handbook.md", "expected_page": null, "answerable": true, "must_contain": ["four months", "4 months"]},
+
+  {"question": "How much water does the espresso machine's tank hold?", "expected_file": "coffee_machine_manual.pdf", "expected_page": 1, "answerable": true, "must_contain": ["1.8"]},
+  {"question": "How often should I descale the coffee machine?", "expected_file": "coffee_machine_manual.pdf", "expected_page": 2, "answerable": true, "must_contain": ["8 weeks", "eight weeks"]},
+  {"question": "What does error E7 mean on the Aurora 3?", "expected_file": "coffee_machine_manual.pdf", "expected_page": 3, "answerable": true, "must_contain": ["too hot"]},
+  {"question": "How many grams of coffee should I use for a double espresso?", "expected_file": "coffee_machine_manual.pdf", "expected_page": 1, "answerable": true, "must_contain": ["18"]},
+  {"question": "How long is the warranty if I register the machine online?", "expected_file": "coffee_machine_manual.pdf", "expected_page": 3, "answerable": true, "must_contain": ["3 years", "three years", "3-year"]},
+
+  {"question": "What time does the ferry to the Isle of Varro leave on Thursday?", "expected_file": "trip_plan.docx", "expected_page": null, "answerable": true, "must_contain": ["8:00", "8 am", "8am", "08:00"]},
+  {"question": "How much money do we get per day for lunch and dinner on the trip?", "expected_file": "trip_plan.docx", "expected_page": null, "answerable": true, "must_contain": ["60"]},
+  {"question": "What do we do on Friday if the sea is too rough for kayaking?", "expected_file": "trip_plan.docx", "expected_page": null, "answerable": true, "must_contain": ["lighthouse"]},
+
+  {"question": "What is the new launch date for version 2.0 of the Fernway app?", "expected_file": "meeting_notes.txt", "expected_page": null, "answerable": true, "must_contain": ["6 April", "April 6"]},
+  {"question": "Who will write the job ad for the second tester?", "expected_file": "meeting_notes.txt", "expected_page": null, "answerable": true, "must_contain": ["Jonas"]},
+
+  {"question": "What is the capital of France?", "expected_file": null, "expected_page": null, "answerable": false, "must_contain": []},
+  {"question": "Who won the football World Cup in 2018?", "expected_file": null, "expected_page": null, "answerable": false, "must_contain": []},
+  {"question": "How much does the Aurora 3 espresso machine cost?", "expected_file": null, "expected_page": null, "answerable": false, "must_contain": []},
+  {"question": "What is the dress code at Pebblecrest Studio?", "expected_file": null, "expected_page": null, "answerable": false, "must_contain": []},
+  {"question": "What time does the ferry to Varro leave on Friday?", "expected_file": null, "expected_page": null, "answerable": false, "must_contain": []}
+]
