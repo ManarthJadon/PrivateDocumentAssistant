@@ -50,10 +50,12 @@ def split_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) 
     return chunks
 
 
-def chunk_pages(pages: list[tuple[int | None, str]]) -> list[Chunk]:
+def chunk_pages(
+    pages: list[tuple[int | None, str]], size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP
+) -> list[Chunk]:
     # Split every page on its own, so a chunk never mixes two pages.
     return [
         Chunk(page, piece)
         for page, text in pages
-        for piece in split_text(text)
+        for piece in split_text(text, size, overlap)
     ]

@@ -4,7 +4,7 @@ from pathlib import Path, PureWindowsPath
 import psycopg
 
 from app import db
-from app.chunker import chunk_pages
+from app.chunker import CHUNK_SIZE, chunk_pages
 from app.reader import read_document
 
 MAX_BYTES = 20 * 1024 * 1024  # 20 MB
@@ -22,6 +22,7 @@ def add_document(
     workspace_id: int,
     filename: str,
     data: bytes,
+    chunk_size: int = CHUNK_SIZE,  # only the quality check changes this
 ) -> int:
     # 1. Keep only the file's own name: "C:\fakepath\notes.txt" -> "notes.txt",
     #    "../../evil.txt" -> "evil.txt". PureWindowsPath understands both \ and /.
@@ -37,7 +38,7 @@ def add_document(
 
     # 3. The slow part, all in memory: read, cut into chunks, embed.
     pages = read_document(name, data)
-    chunks = chunk_pages(pages)
+    chunks = chunk_pages(pages, size=chunk_size)
     embeddings = ollama.embed_documents([chunk.text for chunk in chunks])
 
     # 4. Save the original file under a random name ...
