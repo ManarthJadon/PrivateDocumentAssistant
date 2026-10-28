@@ -18,6 +18,13 @@ def test_pdf_pages_are_numbered():
     assert pages[1][0] == 2 and "Bananas" in pages[1][1]
 
 
+def test_word_made_pdf_keeps_words_together():
+    # Word saves each word as a separate piece; reading in plain order
+    # put every word on its own line ("Apples\n \nare\n \nred.").
+    pages = read_document("sample.pdf", (FIXTURES / "sample.pdf").read_bytes())
+    assert "Apples are red." in pages[0][1]
+
+
 def test_docx_has_no_page():
     pages = read_document("sample.docx", (FIXTURES / "sample.docx").read_bytes())
     assert len(pages) == 1
