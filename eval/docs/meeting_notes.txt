@@ -1,0 +1,45 @@
+﻿Pebblecrest Studio – Product Team Meeting Notes
+Date: Monday 2 March
+Present: Mira (team lead), Jonas, Priya, Tomasz, Ellen
+Absent: Kofi (on holiday)
+
+
+1. Launch of the Fernway app
+
+
+The launch of version 2.0 of the Fernway app is moved from 16 March to 6 April. The reason is that the payment provider needs two more weeks to finish their security review. Mira will tell the client about the new date by Wednesday.
+
+
+The beta test had 340 users. The average rating was 4.3 out of 5. The most common complaint was that the app is slow to start on older Android phones. Priya will look into the start-up time and report back at the next meeting.
+
+
+2. Budget
+
+
+The team has spent 41,000 euros of the 60,000 euro budget for this quarter. The biggest cost was the external design agency. Jonas proposed hiring a second tester for three months. Mira agreed, as long as the cost stays below 9,000 euros. Jonas will write the job ad by Friday 6 March.
+
+
+3. Office move
+
+
+The team moves from the second floor to the fourth floor on 20 March. Everyone must pack their desk by the evening of 19 March. Boxes are available at reception. Tomasz is responsible for moving the test devices, because several of them are fragile.
+
+
+4. Other points
+
+
+Ellen asked if the team can switch the weekly meeting from Monday to Tuesday, because many people work from home on Mondays. This was not decided; we will vote on it next week.
+
+
+The team chose a name for the new internal design system: Lantern. Ellen will create the first version of the colour palette.
+
+
+Action points
+- Mira: tell the client about the new launch date, by Wednesday 4 March.
+- Priya: investigate the slow start-up on older Android phones, before the next meeting.
+- Jonas: write the job ad for the second tester, by Friday 6 March.
+- Tomasz: plan the move of the test devices, before 19 March.
+- Ellen: first version of the Lantern colour palette, by 13 March.
+
+
+Next meeting: Monday 9 March at 10:00 in the small meeting room.
