@@ -6,7 +6,7 @@ Ask questions about your own documents and get answers with sources. Everything 
 
 ## Status
 
-Work in progress (10 of 12 build steps done).
+Work in progress (11 of 12 build steps done).
 
 - [x] Settings from `.env`
 - [x] Reading PDF, Word (.docx), .txt and .md files
@@ -18,7 +18,7 @@ Work in progress (10 of 12 build steps done).
 - [x] Deleting documents and workspaces (their files too)
 - [x] Web API (FastAPI) with friendly error messages
 - [x] Web page (plain HTML, CSS and JavaScript)
-- [ ] Quality check (~20 test questions)
+- [x] Quality check: 20 test questions, 20/20 with `llama3.1:8b` (`eval/run_quality_check.py`)
 - [ ] One-command Docker run, demo video
 
 ## How it works
