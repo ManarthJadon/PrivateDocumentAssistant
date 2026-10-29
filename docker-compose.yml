@@ -16,6 +16,24 @@ services:
       timeout: 3s
       retries: 10
 
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      OLLAMA_URL: http://host.docker.internal:11434
+      UPLOADS_DIR: /data/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
-  
