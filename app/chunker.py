@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 # How big each chunk is, and how much neighbouring chunks share.
-# Phase 4 (quality check) tries other values and keeps the best.
+# The quality check scored 20/20 with 500, 1000 and 1500; 1000 keeps more
+# context per excerpt for questions that need more than one sentence.
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 150
 

@@ -6,7 +6,10 @@ import psycopg
 from app import db
 
 TOP_K = 5  # how many chunks the model gets to read
-MAX_DISTANCE = 0.8  # loose start value; Task 11 measures the real one
+# Only a cheap early exit for questions far off-topic. The quality check showed that
+# answerable and unanswerable questions overlap in distance (0.11-0.39 vs 0.21-0.51),
+# so the model's NOT_FOUND rule is the real guard; a tighter cutoff blocked real answers.
+MAX_DISTANCE = 0.8
 
 SYSTEM_PROMPT = """You answer questions using ONLY the numbered excerpts provided.
 Rules:
