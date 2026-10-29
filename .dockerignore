@@ -1,0 +1,9 @@
+# Allowlist: block everything, then let in only what the app needs.
+# This way .env (the password), uploads/ (your documents) and .venv can never
+# end up inside the image, even if new files are added to the project later.
+*
+!app/
+!requirements.txt
+
+# Python's cache files inside app/ are not needed either.
+**/__pycache__
