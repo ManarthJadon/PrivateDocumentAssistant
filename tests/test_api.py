@@ -17,7 +17,7 @@ def client(conn, fake, tmp_path):
     app.dependency_overrides[get_conn] = lambda: conn
     app.dependency_overrides[get_ollama] = lambda: fake
     app.dependency_overrides[get_uploads_dir] = lambda: tmp_path
-    yield TestClient(app)
+    yield TestClient(app, base_url="http://127.0.0.1:8000")  # the same address the browser uses
     app.dependency_overrides.clear()
 
 
@@ -174,6 +174,14 @@ def test_delete_unknown_is_404(client):
     assert client.delete("/api/documents/999").status_code == 404
     assert client.delete("/api/workspaces/999").status_code == 404
 
+
+# --- safety ---
+
+def test_unknown_host_is_rejected(client):
+    # A website pretending to be this computer (DNS rebinding) must not get any data.
+    response = client.get("/api/workspaces", headers={"Host": "evil.example"})
+
+    assert response.status_code == 400
 
 
 # --- web page ---
