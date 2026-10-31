@@ -42,6 +42,17 @@ app = FastAPI(title="Private Document Assistant", lifespan=lifespan)
 # Only answer requests addressed to this computer. This stops DNS rebinding: a website
 # pretending to be 127.0.0.1 so that your browser lets it read your documents.
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
+ALLOWED_ORIGINS = {"http://127.0.0.1:8000", "http://localhost:8000"}
+
+
+@app.middleware("http")
+async def block_other_websites(request: Request, call_next):
+    # Browsers say which website a request came from. This stops a website you visit
+    # from secretly uploading or deleting things here. Tools like curl send no Origin.
+    origin = request.headers.get("origin")
+    if request.method not in ("GET", "HEAD") and origin is not None and origin not in ALLOWED_ORIGINS:
+        return JSONResponse({"detail": "This request came from another website."}, status_code=403)
+    return await call_next(request)
 
 
 # --- dependencies: what each route gets handed (tests swap these) ---
