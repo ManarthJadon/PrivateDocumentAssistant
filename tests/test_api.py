@@ -183,6 +183,39 @@ def test_unknown_host_is_rejected(client):
 
     assert response.status_code == 400
 
+@pytest.mark.parametrize("origin", ["https://evil.example", "http://127.0.0.1:9999", "null"])
+def test_other_website_cannot_write(client, origin):
+    workspace_id = make_workspace(client)
+    headers = {"Origin": origin}
+
+    response = client.post(
+        f"/api/workspaces/{workspace_id}/documents",
+        files={"file": ("notes.txt", b"Apples are red.")},
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "This request came from another website."}
+    assert client.get(f"/api/workspaces/{workspace_id}/documents").json() == []  # nothing was saved
+    assert client.delete(f"/api/workspaces/{workspace_id}", headers=headers).status_code == 403
+
+
+@pytest.mark.parametrize("headers", [
+    {},  # curl and other tools send no Origin
+    {"Origin": "http://127.0.0.1:8000"},
+    {"Origin": "http://localhost:8000"},
+])
+def test_this_computer_can_write(client, headers):
+    workspace_id = make_workspace(client)
+
+    response = client.post(
+        f"/api/workspaces/{workspace_id}/documents",
+        files={"file": ("notes.txt", b"Apples are red.")},
+        headers=headers,
+    )
+
+    assert response.status_code == 201
+
 
 # --- web page ---
 
