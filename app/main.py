@@ -5,6 +5,7 @@ from pathlib import Path, PureWindowsPath
 
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -38,6 +39,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Private Document Assistant", lifespan=lifespan)
+# Only answer requests addressed to this computer. This stops DNS rebinding: a website
+# pretending to be 127.0.0.1 so that your browser lets it read your documents.
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
 
 
 # --- dependencies: what each route gets handed (tests swap these) ---
