@@ -1,6 +1,7 @@
 import io
 from pathlib import Path
 
+import docx
 import pypdf
 import pytest
 
@@ -30,6 +31,36 @@ def test_docx_has_no_page():
     assert len(pages) == 1
     assert pages[0][0] is None
     assert "Cherries" in pages[0][1]
+
+
+def save_docx(document) -> bytes:
+    buffer = io.BytesIO()
+    document.save(buffer)
+    return buffer.getvalue()
+
+
+def test_docx_reads_tables_in_order():
+    document = docx.Document()
+    document.add_paragraph("Before the table.")
+    table = document.add_table(rows=1, cols=2)
+    table.cell(0, 0).text = "Plums"
+    table.cell(0, 1).text = "purple"
+    document.add_paragraph("After the table.")
+
+    pages = read_document("fruit.docx", save_docx(document))
+
+    assert pages == [(None, "Before the table.\n\nPlums | purple\n\nAfter the table.")]
+
+
+def test_docx_merged_table_cell_is_read_once():
+    # Word reports a merged cell once for every column it covers.
+    document = docx.Document()
+    table = document.add_table(rows=1, cols=2)
+    table.cell(0, 0).merge(table.cell(0, 1)).text = "Plums"
+
+    pages = read_document("fruit.docx", save_docx(document))
+
+    assert pages == [(None, "Plums")]
 
 
 def test_txt_and_md():
