@@ -47,6 +47,15 @@ def test_non_utf8_text_does_not_crash():
     assert "caf" in pages[0][1]
 
 
+def test_zero_bytes_are_removed_from_pdf_text(monkeypatch):
+    # Some PDF fonts give zero bytes, and the database refuses to store them.
+    monkeypatch.setattr(pypdf.PageObject, "extract_text", lambda self, **options: "Apples\x00 are red")
+
+    pages = read_document("sample.pdf", (FIXTURES / "sample.pdf").read_bytes())
+
+    assert pages[0][1] == "Apples are red"
+
+
 # --- problems the user should hear about ---
 
 def make_blank_pdf() -> bytes:
@@ -75,3 +84,9 @@ def test_unsupported_type():
 def test_broken_pdf():
     with pytest.raises(ReadError, match="Couldn't read this file"):
         read_document("broken.pdf", b"not a pdf")
+
+
+@pytest.mark.parametrize("filename", ["program.txt", "program.md"])
+def test_program_renamed_to_text_is_refused(filename):
+    with pytest.raises(ReadError, match="Couldn't read this file"):
+        read_document(filename, b"MZ\x00\x01 pretending to be text")
