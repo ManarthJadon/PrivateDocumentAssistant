@@ -3,12 +3,20 @@ from pathlib import Path
 
 import docx
 import pypdf
+from docx.table import Table
 
 SUPPORTED_TYPES = {".pdf", ".docx", ".txt", ".md"}
 
 
 class ReadError(Exception):
     """A problem with the file. Its text is shown to the user as it is."""
+
+def docx_part_text(part) -> str:
+    # A paragraph is plain text. A table becomes one line per row: "Plums | purple".
+    if not isinstance(part, Table):
+        return part.text
+    # dict.fromkeys drops repeats, because Word reports a merged cell once per column.
+    return "\n".join(" | ".join(dict.fromkeys(cell.text for cell in row.cells)) for row in part.rows)
 
 
 def read_document(filename: str, data: bytes) -> list[tuple[int | None, str]]:
@@ -32,7 +40,7 @@ def read_document(filename: str, data: bytes) -> list[tuple[int | None, str]]:
             ]
         elif suffix == ".docx":
             document = docx.Document(io.BytesIO(data))
-            pages = [(None, "\n\n".join(p.text for p in document.paragraphs))]
+            pages = [(None, "\n\n".join(docx_part_text(part) for part in document.iter_inner_content()))]
         else:
             # A real text file never has a zero byte; programs are full of them.
             if b"\x00" in data:
