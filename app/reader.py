@@ -27,13 +27,16 @@ def read_document(filename: str, data: bytes) -> list[tuple[int | None, str]]:
             # "layout" rebuilds lines from where the words sit on the page.
             # Plain reading put every word of Word-made PDFs on its own line.
             pages = [
-                (number, page.extract_text(extraction_mode="layout") or "")
+                (number,(page.extract_text(extraction_mode="layout") or "").replace("\x00", ""))
                 for number, page in enumerate(reader.pages, start=1)
             ]
         elif suffix == ".docx":
             document = docx.Document(io.BytesIO(data))
             pages = [(None, "\n\n".join(p.text for p in document.paragraphs))]
         else:
+            # A real text file never has a zero byte; programs are full of them.
+            if b"\x00" in data:
+                raise ValueError("not a text file")
             # .txt / .md: "utf-8-sig" also removes the invisible mark Notepad
             # sometimes adds; "replace" turns unreadable bytes into � instead of crashing.
             pages = [(None, data.decode("utf-8-sig", errors="replace"))]
