@@ -107,6 +107,16 @@ def test_empty_txt_raises_no_text():
         read_document("empty.txt", b"   ")
 
 
+def test_scanned_hint_is_only_for_pdfs():
+    with pytest.raises(ReadError, match="Scanned PDFs") as pdf_error:
+        read_document("blank.pdf", make_blank_pdf())
+    with pytest.raises(ReadError, match="No text found") as text_error:
+        read_document("empty.txt", b"   ")
+
+    assert "PDF" in str(pdf_error.value)
+    assert "PDF" not in str(text_error.value)
+
+
 def test_unsupported_type():
     with pytest.raises(ReadError, match="Only .pdf, .docx, .txt and .md"):
         read_document("a.exe", b"whatever")
