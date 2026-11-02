@@ -53,6 +53,7 @@ def read_document(filename: str, data: bytes) -> list[tuple[int | None, str]]:
 
     # 3. A file with no words at all (e.g. a scanned PDF, which is only pictures).
     if not any(text.strip() for _, text in pages):
-        raise ReadError("No text found. Scanned PDFs aren't supported yet.")
+        hint = " Scanned PDFs aren't supported yet." if suffix == ".pdf" else ""
+        raise ReadError(f"No text found.{hint}")
 
     return pages
