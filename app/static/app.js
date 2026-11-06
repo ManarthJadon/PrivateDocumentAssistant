@@ -180,7 +180,8 @@ $("upload-form").addEventListener("submit", (event) => {
 
 $("ask-form").addEventListener("submit", (event) => {
     event.preventDefault();
-    const question = questionBox.value;
+        const question = questionBox.value;
+    hideAnswer();  // never leave an old answer on screen as if it answered this question
     busy("Thinking...", async () => {
         const result = await api("POST", `/api/workspaces/${currentWorkspace()}/ask`, { question });
         showAnswer(result);

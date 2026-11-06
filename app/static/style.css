@@ -131,6 +131,8 @@ button:disabled { opacity: 0.5; cursor: wait; }
 #error:empty { display: none; }
 
 #error {
+    position: sticky;  /* stays in view at the bottom of the window, even on a long page */
+    bottom: 16px;
     background: var(--error-bg);
     color: var(--danger);
     border-radius: 6px;
