@@ -10,7 +10,7 @@ Demo video: coming soon.
 
 ## Status
 
-All 12 build steps done.
+Version 1 done (all 12 build steps). Now in Phase 2: security, hard testing, then a new design.
 
 - [x] Settings from `.env`
 - [x] Reading PDF, Word (.docx), .txt and .md files
@@ -24,6 +24,12 @@ All 12 build steps done.
 - [x] Web page (plain HTML, CSS and JavaScript)
 - [x] Quality check: 20 test questions, 20/20 with `llama3.1:8b`
 - [x] One-command run with Docker Compose
+- [x] Security: only answers requests meant for this computer, and blocks writes from other websites
+- [x] Hard testing: 10 strange files (locked, empty, fake, too big, Hindi names, attack code), 3 bugs fixed
+- [x] Hard testing: Ollama or the database stopped gives a friendly message, 1 page bug fixed
+- [ ] Hard testing: missing model, prompt injection, size and speed, dependency check
+- [ ] New, professional page design
+- [ ] Final check, screenshots and demo video
 
 ## How it works
 
@@ -79,6 +85,10 @@ Ollama runs on your computer, not in Docker, so it can use your GPU. The app rea
 
 Run it yourself (with Ollama running): `.venv\Scripts\python -m eval.run_quality_check`
 
+## Hard testing
+
+Every test result, bug found and known limit is written down in [docs/testing.md](docs/testing.md).
+
 ## Stack
 
 - Python 3.14 + FastAPI
@@ -93,6 +103,8 @@ Run it yourself (with Ollama running): `.venv\Scripts\python -m eval.run_quality
 
 - The app only accepts connections from `127.0.0.1` (your own computer), so other devices can't reach it.
 - The database port is also only open to your own computer.
+- Requests addressed to any name other than `127.0.0.1` or `localhost` are refused, so a website can't trick your browser into reading your documents (DNS rebinding).
+- Uploads, deletes and questions sent from another website are refused (cross-site request forgery).
 - Uploaded files and the database stay on your disk and are never committed to git or packed into the Docker image.
 - Deleting a document or workspace also deletes its uploaded files.
 - Text inside your documents is treated as data, never as instructions to the AI.
@@ -129,10 +141,10 @@ The tests don't need Ollama. They use a fake one.
 | `app/db.py` | All SQL: tables, workspaces, documents, chunks, search, deleting |
 | `app/ingest.py` | Adds a document: check, read, chunk, embed, save |
 | `app/rag.py` | Answers a question: search, prompt, read the reply, sources |
-| `app/main.py` | The web API and the web page: routes, uploads, friendly error messages |
+| `app/main.py` | The web API and the web page: routes, uploads, friendly error messages, security checks |
 | `app/static/` | The web page: `index.html` (structure), `style.css` (looks), `app.js` (buttons and API calls) |
 | `eval/` | Quality check: test documents, 20 questions, the script that marks the answers |
 | `tests/` | Unit, database and API tests, plus the fake Ollama |
 | `Dockerfile` | Packs the app into an image |
 | `docker-compose.yml` | Starts the app and the database together |
-| `docs/` | Design spec and build plan |
+| `docs/` | Design spec, build plan and hard-testing results (`testing.md`) |
