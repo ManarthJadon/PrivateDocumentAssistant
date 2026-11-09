@@ -43,3 +43,19 @@ Uploaded by `context/try_strange_files.py` (made in memory, not committed). Fina
 - **UTF-16 text files** (an old Notepad option) are refused, because they contain zero bytes.
 - **Word tables:** cells with the same text in one row are kept once ("Yes | Yes" → "Yes").
 - **Old uploads** keep their old chunks until deleted and uploaded again.
+
+## Stopped services (Step 14b)
+
+Each service was stopped while the app was running, then a question was asked on the page.
+
+| What was stopped | Result |
+|---|---|
+| Ollama (quit from the taskbar) | The server answers at once with "Ollama isn't running. Start it and try again." Works again as soon as Ollama is back. (**page bug, fixed**) |
+| The database (`docker compose stop db`) | Friendly error message, no crash. Works again after `docker compose start db`. |
+| Everything (`docker compose down`, then `docker compose up -d`) | Workspaces, documents and answers are all still there. |
+
+### Bugs found and fixed
+
+| Bug | Cause | Fix | Commit |
+|---|---|---|---|
+| With Ollama stopped, the page seemed to do nothing, and the old answer stayed on screen | The red error box was at the very bottom of the page, out of view, and the previous answer was never cleared | The old answer is hidden as soon as a new question is sent; the error box sticks to the bottom of the window so it's always visible | `12b7058` |
