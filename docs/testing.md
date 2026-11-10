@@ -54,9 +54,10 @@ Each service was stopped while the app was running, then a question was asked on
 | The database (`docker compose stop db`) | Friendly error message, no crash. Works again after `docker compose start db`. |
 | Everything (`docker compose down`, then `docker compose up -d`) | Workspaces, documents and answers are all still there. |
 | The chat model (`CHAT_MODEL` set to a model that isn't downloaded) | Answers 503 with "Model fake-model:1b not found. Run: ollama pull fake-model:1b". Works again once the setting is put back. No real model was removed for this test. |
-
+| Nothing: the same file uploaded twice at the same moment (`context/try_double_upload.py`) | One upload is saved; the other gets 409 "notes.txt is already in this workspace." Only 1 document and 1 file in `uploads/`. (**was a 500, fixed**) |
 ### Bugs found and fixed
 
 | Bug | Cause | Fix | Commit |
 |---|---|---|---|
 | With Ollama stopped, the page seemed to do nothing, and the old answer stayed on screen | The red error box was at the very bottom of the page, out of view, and the previous answer was never cleared | The old answer is hidden as soon as a new question is sent; the error box sticks to the bottom of the window so it's always visible | `12b7058` |
+| Two uploads of the same file at once: the second got "Something went wrong." | Both passed the "already there?" check before either was saved; the database's UNIQUE rule then refused the second, and nothing caught that | The database's refusal is turned into the friendly "already in this workspace" message (409); its file is deleted again | `<commit>` |
