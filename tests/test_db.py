@@ -47,6 +47,15 @@ def test_name_differing_only_in_case_is_duplicate(conn):
         create_workspace(conn, "college")
 
 
+def test_duplicate_document_raises(conn):
+    # Two uploads of the same file at once both pass the "already there?" check;
+    # the database's UNIQUE rule must then turn into a friendly error, not a crash.
+    workspace_id = create_workspace(conn, "College")
+    insert_document(conn, workspace_id, "notes.txt", "a.txt", 1)
+    with pytest.raises(AlreadyExists, match="notes.txt is already in this workspace."):
+        insert_document(conn, workspace_id, "notes.txt", "b.txt", 1)
+
+
 def test_get_missing_workspace_returns_none(conn):
     assert get_workspace(conn, 999) is None
 
