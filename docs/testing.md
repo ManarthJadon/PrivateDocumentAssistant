@@ -53,6 +53,7 @@ Each service was stopped while the app was running, then a question was asked on
 | Ollama (quit from the taskbar) | The server answers at once with "Ollama isn't running. Start it and try again." Works again as soon as Ollama is back. (**page bug, fixed**) |
 | The database (`docker compose stop db`) | Friendly error message, no crash. Works again after `docker compose start db`. |
 | Everything (`docker compose down`, then `docker compose up -d`) | Workspaces, documents and answers are all still there. |
+| The chat model (`CHAT_MODEL` set to a model that isn't downloaded) | Answers 503 with "Model fake-model:1b not found. Run: ollama pull fake-model:1b". Works again once the setting is put back. No real model was removed for this test. |
 
 ### Bugs found and fixed
 
