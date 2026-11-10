@@ -96,11 +96,16 @@ def document_exists(conn: psycopg.Connection, workspace_id: int, filename: str) 
 def insert_document(
     conn: psycopg.Connection, workspace_id: int, filename: str, stored_path: str, page_count: int
 ) -> int:
-    row = conn.execute(
-        "INSERT INTO documents (workspace_id, filename, stored_path, page_count)"
-        " VALUES (%s, %s, %s, %s) RETURNING id",
-        (workspace_id, filename, stored_path, page_count),
-    ).fetchone()
+    try:
+        row = conn.execute(
+            "INSERT INTO documents (workspace_id, filename, stored_path, page_count)"
+            " VALUES (%s, %s, %s, %s) RETURNING id",
+            (workspace_id, filename, stored_path, page_count),
+        ).fetchone()
+    except psycopg.errors.UniqueViolation:
+        # Two uploads of the same file at once: both passed the "already there?"
+        # check, and the database's UNIQUE rule stopped the second one.
+        raise AlreadyExists(f"{filename} is already in this workspace.") from None
     return row["id"]
 
 
