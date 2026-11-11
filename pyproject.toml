@@ -10,7 +10,7 @@ dependencies = [
     "python-multipart",
     "psycopg[binary]",
     "pgvector",
-    "pypdf",
+    "pypdf>=6.21.4,<7",  # 6.21.4 fixes 10 known security holes; 7.x is a bigger change, test it first,
     "python-docx",
     "httpx",
     "python-dotenv",

@@ -42,7 +42,7 @@ pydantic==2.14.1
     # via fastapi
 pydantic-core==2.50.1
     # via pydantic
-pypdf==6.21.1
+pypdf==6.21.4
     # via private-document-assistant (pyproject.toml)
 python-docx==1.2.0
     # via private-document-assistant (pyproject.toml)
