@@ -87,3 +87,21 @@ Whole quality check with the attack document added: right chunk found 17/17, ans
 - The AI has no tools: it can't send anything, open websites, delete files or read other workspaces. The worst a successful attack can do is a wrong or strange answer, shown as plain text.
 - **False facts are believed.** The app answers from your documents, so a document that states something false is repeated. Only trust answers from documents you trust.
 - The test checks one kind of attack. Other orders (a different word, "show your instructions") are not covered yet.
+
+
+## Size and speed (Step 14d)
+
+Measured on this laptop (RTX 4070 Laptop GPU with 8 GB, app in Docker, Ollama on Windows).
+
+| Test | Result |
+|---|---|
+| 50 short documents in one workspace (`context/try_many_documents.py`) | 50 of 50 saved in 5.5 seconds (0.11 s each) |
+| 5 questions among 50 look-alike documents (five people called Mira, five called Tomas, ...) | 5 of 5 correct with the right source. First question 9.0 s, second 3.4 s, the rest 0.3-0.4 s |
+| A text file of exactly 20 MB, the biggest allowed (`context/try_big_file.py`) | Accepted in 4.7 minutes (one byte more is refused, see Strange files) |
+| One sentence hidden in the middle of that 20 MB file | Found: "Under the red carpet in the hallway. [1]" in 10.0 s |
+
+### Known limits
+
+- **The first question after a break is slower** (about 9-10 s instead of under 1 s). Ollama first loads `llama3.1:8b` into the GPU's memory, and unloads it again after about 5 minutes without questions.
+- **A 20 MB text file takes about 5 minutes to upload**, because every chunk (about 24,700) needs its own embedding. The page only shows "Uploading..." during that time (to improve in Task 15).
+- 20 MB of plain text is the worst case (about 10,000 book pages). Real 20 MB PDFs are mostly pictures and hold far less text, so they upload much faster.
