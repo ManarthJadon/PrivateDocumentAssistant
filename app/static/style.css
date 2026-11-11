@@ -127,7 +127,39 @@ button:disabled { opacity: 0.5; cursor: wait; }
 
 /* --- messages --- */
 .muted { color: var(--muted); }
-#status { color: var(--muted); min-height: 1.5em; }
+#status:empty { display: none; }
+
+#status {
+    position: sticky;  /* like the error box: always in view while something is working */
+    bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+/* A small spinning circle in front of the message. */
+#status::before {
+    content: "";
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* People who turned off animations in Windows get a still circle. */
+@media (prefers-reduced-motion: reduce) {
+    #status::before { animation: none; }
+}
 #error:empty { display: none; }
 
 #error {

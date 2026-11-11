@@ -43,13 +43,24 @@ async function api(method, path, body) {
 
 async function busy(message, work) {
     setDisabled(true);
-    $("status").textContent = message;
     $("error").textContent = "";
+
+    // A clock that counts up every second, so a long wait never looks frozen.
+    const started = Date.now();
+    const tick = () => {
+        const seconds = Math.floor((Date.now() - started) / 1000);
+        const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+        $("status").textContent = `${message} ${clock}`;
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+
     try {
         await work();
     } catch (error) {
         $("error").textContent = error.message;
     } finally {
+        clearInterval(timer);  // stop the clock
         setDisabled(false);
         $("status").textContent = "";
     }
@@ -168,7 +179,7 @@ $("upload-form").addEventListener("submit", (event) => {
     if (!file) return;
     const form = new FormData();
     form.append("file", file);
-    busy(`Processing ${file.name}... (big files can take a minute)`, async () => {
+       busy(`Reading and indexing ${file.name}... Big files can take a few minutes.`, async () => {
         await api("POST", `/api/workspaces/${currentWorkspace()}/documents`, form);
         fileInput.value = "";
         await loadDocuments();
