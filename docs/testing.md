@@ -105,3 +105,19 @@ Measured on this laptop (RTX 4070 Laptop GPU with 8 GB, app in Docker, Ollama on
 - **The first question after a break is slower** (about 9-10 s instead of under 1 s). Ollama first loads `llama3.1:8b` into the GPU's memory, and unloads it again after about 5 minutes without questions.
 - **A 20 MB text file takes about 5 minutes to upload**, because every chunk (about 24,700) needs its own embedding. The page only shows "Uploading..." during that time (to improve in Task 15).
 - 20 MB of plain text is the worst case (about 10,000 book pages). Real 20 MB PDFs are mostly pictures and hold far less text, so they upload much faster.
+
+
+## Outside code (Step 14e)
+
+Our app uses code written by others: about 25 Python libraries, and a small Debian Linux inside the Docker image. Both were checked against public lists of known security holes (CVEs).
+
+| Check | Found | Fix | Commit |
+|---|---|---|---|
+| `uvx pip-audit -r requirements.txt` (Python libraries) | 10 holes in `pypdf` 6.21.1: a broken PDF could make it run forever or use huge amounts of memory | Upgraded to `pypdf` 6.21.4; then "No known vulnerabilities found" | `abfda56` |
+| `docker scout quickview` (the whole Docker image) | 8 high: 6 in pip's own bundled copies of msgpack, urllib3 and setuptools (pip never runs in the app), 2 in Debian's zlib (used when reading compressed PDFs) | Debian security updates while the image is built, and pip removed after installing our libraries; then 0 critical, 0 high (1 medium and 26 low left). The app still uploads and answers without pip | `9fb79e1` |
+
+### Known limits
+
+- Docker reuses the cached `apt-get upgrade` layer, so newer Debian fixes don't arrive on their own. Rebuild with `docker compose build --no-cache app` to get them.
+- Scout still lists 2 failed policies that aren't security holes: copyleft licences (normal for Debian software) and missing "supply chain attestations" (signed build records, needed only for images published to a registry).
+- These checks only know holes that are already public. They need to be run again before every release.
