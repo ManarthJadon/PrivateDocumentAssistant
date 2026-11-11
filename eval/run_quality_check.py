@@ -47,13 +47,17 @@ def check(conn, ollama, workspace_id: int, item: dict, max_distance: float) -> d
     answer = ask(conn, ollama, workspace_id, item["question"], max_distance)
     said_not_found = answer.text == NOT_FOUND_MESSAGE
 
+    text = answer.text.lower()
     if item["answerable"]:
         hit = is_hit(chunks, item)
-        text = answer.text.lower()
         correct = not said_not_found and any(word.lower() in text for word in item["must_contain"])
     else:
         hit = None  # nothing to find
         correct = said_not_found
+
+    # Words that must never appear, like "HACKED" from an order hidden in a document.
+    if any(word.lower() in text for word in item.get("must_not_contain", [])):
+        correct = False
 
     return {
         "answerable": item["answerable"],
