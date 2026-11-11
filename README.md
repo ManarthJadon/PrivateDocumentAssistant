@@ -10,7 +10,7 @@ Demo video: coming soon.
 
 ## Status
 
-Version 1 done (all 12 build steps). Now in Phase 2: security, hard testing, then a new design.
+Version 1 done (all 12 build steps). Phase 2: security and hard testing are done, a new page design is next.
 
 - [x] Settings from `.env`
 - [x] Reading PDF, Word (.docx), .txt and .md files
@@ -22,12 +22,16 @@ Version 1 done (all 12 build steps). Now in Phase 2: security, hard testing, the
 - [x] Deleting documents and workspaces (their files too)
 - [x] Web API (FastAPI) with friendly error messages
 - [x] Web page (plain HTML, CSS and JavaScript)
-- [x] Quality check: 20 test questions, 20/20 with `llama3.1:8b`
+- [x] Quality check: 23 test questions, including an attack document, all answered correctly with `llama3.1:8b`
 - [x] One-command run with Docker Compose
 - [x] Security: only answers requests meant for this computer, and blocks writes from other websites
 - [x] Hard testing: 10 strange files (locked, empty, fake, too big, Hindi names, attack code), 3 bugs fixed
 - [x] Hard testing: Ollama or the database stopped gives a friendly message, 1 page bug fixed
-- [ ] Hard testing: missing model, prompt injection, size and speed, dependency check
+- [x] Hard testing: missing model gives a clear message, two uploads of the same file at once no longer cause an error
+- [x] Hard testing: instructions hidden inside a document (prompt injection) are ignored
+- [x] Hard testing: 50 documents and a file of exactly 20 MB work
+- [x] Dependency check: 10 known holes in a PDF library fixed, Docker image security issues (8 high) fixed to 0 high
+- [x] Waiting message with a live timer for slow uploads and answers
 - [ ] New, professional page design
 - [ ] Final check, screenshots and demo video
 
@@ -82,6 +86,8 @@ Ollama runs on your computer, not in Docker, so it can use your GPU. The app rea
 | `qwen3:8b` instead of `llama3.1:8b` | 15/15 | 15/15 | 3/5 |
 
 1000 keeps more context per chunk than 500 and gives finer sources than 1500. `qwen3:8b` invented answers to 2 of the 5 questions it should have refused, so it was rejected.
+
+Later, a fifth document with hidden instructions in it (an "attack document") and 3 more questions were added, for 23 questions in total. Final result with the chosen setup: right file found 17/17, answer correct 17/17, "not found" when it should 6/6, and the attack text was never obeyed.
 
 Run it yourself (with Ollama running): `.venv\Scripts\python -m eval.run_quality_check`
 
@@ -143,7 +149,7 @@ The tests don't need Ollama. They use a fake one.
 | `app/rag.py` | Answers a question: search, prompt, read the reply, sources |
 | `app/main.py` | The web API and the web page: routes, uploads, friendly error messages, security checks |
 | `app/static/` | The web page: `index.html` (structure), `style.css` (looks), `app.js` (buttons and API calls) |
-| `eval/` | Quality check: test documents, 20 questions, the script that marks the answers |
+| `eval/` | Quality check: test documents (including the attack document), 23 questions, the script that marks the answers |
 | `tests/` | Unit, database and API tests, plus the fake Ollama |
 | `Dockerfile` | Packs the app into an image |
 | `docker-compose.yml` | Starts the app and the database together |
