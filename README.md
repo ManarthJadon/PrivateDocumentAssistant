@@ -25,12 +25,7 @@ Version 1 done (all 12 build steps). Phase 2: security and hard testing are done
 - [x] Quality check: 23 test questions, including an attack document, all answered correctly with `llama3.1:8b`
 - [x] One-command run with Docker Compose
 - [x] Security: only answers requests meant for this computer, and blocks writes from other websites
-- [x] Hard testing: 10 strange files (locked, empty, fake, too big, Hindi names, attack code), 3 bugs fixed
-- [x] Hard testing: Ollama or the database stopped gives a friendly message, 1 page bug fixed
-- [x] Hard testing: missing model gives a clear message, two uploads of the same file at once no longer cause an error
-- [x] Hard testing: instructions hidden inside a document (prompt injection) are ignored
-- [x] Hard testing: 50 documents and a file of exactly 20 MB work
-- [x] Dependency check: 10 known holes in a PDF library fixed, Docker image security issues (8 high) fixed to 0 high
+- [x] Hard testing: strange files, stopped services, prompt injection, size and speed, outside code (9 problems found and fixed, see below)
 - [x] Waiting message with a live timer for slow uploads and answers
 - [ ] New, professional page design
 - [ ] Final check, screenshots and demo video
@@ -74,7 +69,34 @@ You need [Docker Desktop](https://www.docker.com/products/docker-desktop/) and [
 
 Ollama runs on your computer, not in Docker, so it can use your GPU. The app reaches it through `host.docker.internal`.
 
-## Quality check
+## Testing
+
+The app is tested in three ways:
+
+| Kind | What it checks | How often |
+|---|---|---|
+| **Automatic tests** (90, pytest) | Every piece of code on its own, plus the database and the web API together | On every push, by GitHub Actions |
+| **Quality check** (23 questions) | Does the AI find the right document and give the right answer? | By hand, after changing the AI settings |
+| **Hard testing** (by hand, on the real app) | Attacks, broken files, stopped services, big loads, known security holes | Before the redesign, and again before release |
+
+Full results, every bug and every known limit: [docs/testing.md](docs/testing.md).
+
+### Automatic tests
+
+90 tests in 8 files. They don't need Ollama: a fake Ollama gives fixed answers, so the tests are fast and give the same result every time. They use a separate test database, so your real documents are never touched.
+
+| File | What it tests |
+|---|---|
+| `tests/test_config.py` | Settings are read from `.env` |
+| `tests/test_reader.py` | Text comes out of PDF, Word (including tables), .txt and .md files; broken, empty, scanned and renamed files are refused with the right message |
+| `tests/test_chunker.py` | Chunks have the right size and overlap, never cut a word in half and never cross a PDF page |
+| `tests/test_ollama_client.py` | Talking to Ollama, and the right error when it's off, too slow or a model is missing |
+| `tests/test_db.py` | Workspaces, documents, duplicate names and deleting, in a real PostgreSQL |
+| `tests/test_ingest.py` | Adding a document is all-or-nothing: too-big, duplicate or unreadable files, or a failure halfway, leave nothing behind |
+| `tests/test_rag.py` | The prompt, reading the AI's reply, sources, "not found", and that each workspace only searches its own documents |
+| `tests/test_api.py` | Every web route, friendly error messages, and the security checks |
+
+### Quality check
 
 20 questions about 4 invented documents (a handbook, a coffee machine manual PDF, a trip plan in Word, meeting notes): 15 that the documents answer and 5 that they don't. Invented facts prove the answers come from the documents, not from what the model already knows.
 
@@ -87,13 +109,47 @@ Ollama runs on your computer, not in Docker, so it can use your GPU. The app rea
 
 1000 keeps more context per chunk than 500 and gives finer sources than 1500. `qwen3:8b` invented answers to 2 of the 5 questions it should have refused, so it was rejected.
 
-Later, a fifth document with hidden instructions in it (an "attack document") and 3 more questions were added, for 23 questions in total. Final result with the chosen setup: right file found 17/17, answer correct 17/17, "not found" when it should 6/6, and the attack text was never obeyed.
+Later, a fifth document with hidden orders for the AI (an "attack document") and 3 more questions were added, for 23 questions in total. Final result with the chosen setup: right file found 17/17, answer correct 17/17, "not found" when it should 6/6, and the hidden orders were never obeyed. The whole check takes 26 seconds.
 
 Run it yourself (with Ollama running): `.venv\Scripts\python -m eval.run_quality_check`
 
-## Hard testing
+### Hard testing
 
-Every test result, bug found and known limit is written down in [docs/testing.md](docs/testing.md).
+| Area | What was tried | Result |
+|---|---|---|
+| **Security** | A website pretending to be your computer (DNS rebinding); a website secretly uploading or deleting (CSRF); attack code in a filename | All refused, or shown as plain text |
+| **Strange files** | 10 files: password-locked PDF, scanned PDF, programs renamed to `.pdf` and `.txt`, empty Word file, text only in a Word table, 1 byte over 20 MB, Hindi and emoji names, attack code in the name, a 300-character name | 10 of 10 handled as wanted, after 3 fixes |
+| **Stopped services** | Ollama quit, database stopped, everything restarted, chat model missing, the same file uploaded twice at the same moment | A friendly message every time and no data lost, after 2 fixes |
+| **Prompt injection** | A document that tells the AI to ignore its rules and answer only "HACKED" | Ignored: correct answers with sources |
+| **Size and speed** | 50 documents in one workspace; 5 questions among 50 look-alike documents; a text file of exactly 20 MB; one sentence hidden in the middle of it | 50 saved in 5.5 s; 5 of 5 correct; 20 MB accepted in 4.7 min; hidden sentence found in 10 s |
+| **Outside code** | Python libraries checked with `pip-audit`; the whole Docker image checked with Docker Scout | 10 holes and 8 high-risk issues found, all fixed |
+
+### Problems found and fixed
+
+Every bug got an automatic test first (to prove it exists), then the fix.
+
+| # | Problem | Fix | Commit |
+|---|---|---|---|
+| 1 | A website could pretend to be `127.0.0.1` and read your documents (DNS rebinding) | Only requests addressed to `127.0.0.1` or `localhost` are answered | `75c53e2` |
+| 2 | A website you visit could secretly upload or delete (CSRF) | Writes coming from any other website are refused (403) | `c304a0c` |
+| 3 | A program renamed to `.txt` gave "Something went wrong." | Files with zero bytes are refused with a clear message | `1c40a3a` |
+| 4 | Text inside Word tables was ignored | Tables are read too, in reading order | `5549b0c` |
+| 5 | Empty Word or text files were told "Scanned PDFs aren't supported yet." | That hint only shows for PDFs | `feaa1b4` |
+| 6 | With Ollama stopped, the error was out of view and the old answer stayed on screen | The old answer is hidden, and the error box stays in view | `12b7058` |
+| 7 | The same file uploaded twice at the same moment gave "Something went wrong." | It now gets "already in this workspace" (409), and only one copy is kept | `a32c5a1` |
+| 8 | 10 known security holes in the PDF library `pypdf` (a broken PDF could make it run forever) | Upgraded `pypdf` 6.21.1 → 6.21.4 | `abfda56` |
+| 9 | 8 high-risk issues in the Docker image (Debian's zlib, and libraries bundled inside pip) | Debian security updates at build time, pip removed: 0 high left | `9fb79e1` |
+
+Also improved: a waiting message with a live timer, so a 5-minute upload never looks frozen (`76142ff`).
+
+### Known limits
+
+- Scanned PDFs (pictures of text) can't be read yet; that needs OCR.
+- Questions work best in English; the embedding model is mainly trained on English.
+- The prompt-injection protection is an instruction to the AI, not a lock. The AI has no tools, so the worst a cleverer attack can do is a wrong answer. A document that states something false is repeated as true.
+- The first question after a 5-minute break takes about 10 seconds, while Ollama loads the model into the GPU.
+- A 20 MB text file takes about 5 minutes to upload (about 24,700 chunks).
+- Security checks only know holes that are already public, so they need to run again before every release.
 
 ## Stack
 
