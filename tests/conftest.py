@@ -20,7 +20,7 @@ def conn():
 
     # Start every test with brand-new, empty tables.
     connection = connect(conninfo)
-    connection.execute("DROP TABLE IF EXISTS chunks, documents, workspaces")
+    connection.execute("DROP TABLE IF EXISTS questions, chunks, documents, workspaces")
     init_db(connection)
 
     yield connection  # the test runs here
