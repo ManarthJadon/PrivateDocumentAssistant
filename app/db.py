@@ -2,6 +2,7 @@ import psycopg
 from pgvector import Vector
 from pgvector.psycopg import register_vector
 from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
 
 from app.chunker import Chunk
 
@@ -51,6 +52,16 @@ CREATE TABLE IF NOT EXISTS chunks (
     page int,
     text text NOT NULL,
     embedding vector(768) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS questions (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    workspace_id bigint NOT NULL REFERENCES workspaces ON DELETE CASCADE,
+    question text NOT NULL,
+    answer text NOT NULL,
+    sources jsonb NOT NULL,
+    related boolean NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
 );
 """
 
@@ -157,18 +168,63 @@ def search_chunks(
     ).fetchall()
 
 
+# --- past questions ---
+
+HISTORY_LIMIT = 50  # how many past questions the page shows
+
+
+def insert_question(
+    conn: psycopg.Connection,
+    workspace_id: int,
+    question: str,
+    answer: str,
+    sources: list[dict],
+    related: bool,
+) -> int:
+    # Jsonb(...) turns the Python list of sources into JSON for the jsonb column.
+    row = conn.execute(
+        "INSERT INTO questions (workspace_id, question, answer, sources, related)"
+        " VALUES (%s, %s, %s, %s, %s) RETURNING id",
+        (workspace_id, question, answer, Jsonb(sources), related),
+    ).fetchone()
+    return row["id"]
+
+
+def list_questions(conn: psycopg.Connection, workspace_id: int) -> list[dict]:
+    # Newest first: a higher id means it was saved later.
+    return conn.execute(
+        "SELECT id, question, answer, sources, related, created_at FROM questions"
+        " WHERE workspace_id = %s ORDER BY id DESC LIMIT %s",
+        (workspace_id, HISTORY_LIMIT),
+    ).fetchall()
+
+
+def clear_questions(conn: psycopg.Connection, workspace_id: int) -> None:
+    conn.execute("DELETE FROM questions WHERE workspace_id = %s", (workspace_id,))
+
+
 # --- deleting ---
 
 def delete_document(conn: psycopg.Connection, document_id: int) -> str | None:
-    # Its chunks are deleted too (ON DELETE CASCADE).
-    row = conn.execute(
-        "DELETE FROM documents WHERE id = %s RETURNING stored_path", (document_id,)
-    ).fetchone()
-    return row["stored_path"] if row else None
+    # Its chunks are deleted too (ON DELETE CASCADE), and so are the past answers
+    # that quote it: otherwise its text would live on in the history.
+    with conn.transaction():
+        row = conn.execute(
+            "DELETE FROM documents WHERE id = %s RETURNING workspace_id, filename, stored_path",
+            (document_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        # @> means "contains": is there a source with this filename in the list?
+        conn.execute(
+            "DELETE FROM questions WHERE workspace_id = %s AND sources @> %s",
+            (row["workspace_id"], Jsonb([{"filename": row["filename"]}])),
+        )
+    return row["stored_path"]
 
 
 def delete_workspace(conn: psycopg.Connection, workspace_id: int) -> list[str] | None:
-    # Its documents and their chunks are deleted too (ON DELETE CASCADE).
+    # Its documents, their chunks and its past questions are deleted too (ON DELETE CASCADE).
     with conn.transaction():
         # FOR UPDATE locks the workspace row until we're done, so nobody can
         # add a document to it in between (its file would never be deleted).
