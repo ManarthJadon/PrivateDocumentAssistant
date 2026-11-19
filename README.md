@@ -10,7 +10,7 @@ Demo video: coming soon.
 
 ## Status
 
-Version 1 done (all 12 build steps). Phase 2: security and hard testing are done, a new page design is next.
+Version 1 done (all 12 build steps). Phase 2: security and hard testing are done, and the new page design is in progress.
 
 - [x] Settings from `.env`
 - [x] Reading PDF, Word (.docx), .txt and .md files
@@ -27,7 +27,8 @@ Version 1 done (all 12 build steps). Phase 2: security and hard testing are done
 - [x] Security: only answers requests meant for this computer, and blocks writes from other websites
 - [x] Hard testing: strange files, stopped services, prompt injection, size and speed, outside code (9 problems found and fixed, see below)
 - [x] Waiting message with a live timer for slow uploads and answers
-- [ ] New, professional page design
+- [x] Past questions saved per workspace (database part)
+- [ ] New, professional page design: sidebar layout, drag and drop of several files, clickable sources, past questions on the page, status light for Ollama and the database, light/dark switch ([design](docs/superpowers/specs/2026-11-16-ui-redesign-design.md), [build plan](docs/superpowers/plans/2026-11-16-ui-redesign.md))
 - [ ] Final check, screenshots and demo video
 
 ## How it works
@@ -75,7 +76,7 @@ The app is tested in three ways:
 
 | Kind | What it checks | How often |
 |---|---|---|
-| **Automatic tests** (90, pytest) | Every piece of code on its own, plus the database and the web API together | On every push, by GitHub Actions |
+| **Automatic tests** (96, pytest) | Every piece of code on its own, plus the database and the web API together | On every push, by GitHub Actions |
 | **Quality check** (23 questions) | Does the AI find the right document and give the right answer? | By hand, after changing the AI settings |
 | **Hard testing** (by hand, on the real app) | Attacks, broken files, stopped services, big loads, known security holes | Before the redesign, and again before release |
 
@@ -83,7 +84,7 @@ Full results, every bug and every known limit: [docs/testing.md](docs/testing.md
 
 ### Automatic tests
 
-90 tests in 8 files. They don't need Ollama: a fake Ollama gives fixed answers, so the tests are fast and give the same result every time. They use a separate test database, so your real documents are never touched.
+96 tests in 8 files. They don't need Ollama: a fake Ollama gives fixed answers, so the tests are fast and give the same result every time. They use a separate test database, so your real documents are never touched.
 
 | File | What it tests |
 |---|---|
@@ -91,7 +92,7 @@ Full results, every bug and every known limit: [docs/testing.md](docs/testing.md
 | `tests/test_reader.py` | Text comes out of PDF, Word (including tables), .txt and .md files; broken, empty, scanned and renamed files are refused with the right message |
 | `tests/test_chunker.py` | Chunks have the right size and overlap, never cut a word in half and never cross a PDF page |
 | `tests/test_ollama_client.py` | Talking to Ollama, and the right error when it's off, too slow or a model is missing |
-| `tests/test_db.py` | Workspaces, documents, duplicate names and deleting, in a real PostgreSQL |
+| `tests/test_db.py` | Workspaces, documents, duplicate names, past questions and deleting, in a real PostgreSQL |
 | `tests/test_ingest.py` | Adding a document is all-or-nothing: too-big, duplicate or unreadable files, or a failure halfway, leave nothing behind |
 | `tests/test_rag.py` | The prompt, reading the AI's reply, sources, "not found", and that each workspace only searches its own documents |
 | `tests/test_api.py` | Every web route, friendly error messages, and the security checks |
@@ -169,6 +170,7 @@ Also improved: a waiting message with a live timer, so a 5-minute upload never l
 - Uploads, deletes and questions sent from another website are refused (cross-site request forgery).
 - Uploaded files and the database stay on your disk and are never committed to git or packed into the Docker image.
 - Deleting a document or workspace also deletes its uploaded files.
+- Deleting a document also deletes the past answers that quote it, so its text doesn't live on in the history. Deleting a workspace deletes all its past questions.
 - Text inside your documents is treated as data, never as instructions to the AI.
 - The page shows document text and answers as plain text only, so hidden code in a document can't run in your browser.
 
@@ -200,7 +202,7 @@ The tests don't need Ollama. They use a fake one.
 | `app/reader.py` | Gets the text out of PDF, Word, .txt and .md files |
 | `app/chunker.py` | Cuts text into chunks |
 | `app/ollama_client.py` | Talks to Ollama (embeddings and answers) |
-| `app/db.py` | All SQL: tables, workspaces, documents, chunks, search, deleting |
+| `app/db.py` | All SQL: tables, workspaces, documents, chunks, search, past questions, deleting |
 | `app/ingest.py` | Adds a document: check, read, chunk, embed, save |
 | `app/rag.py` | Answers a question: search, prompt, read the reply, sources |
 | `app/main.py` | The web API and the web page: routes, uploads, friendly error messages, security checks |
@@ -209,4 +211,4 @@ The tests don't need Ollama. They use a fake one.
 | `tests/` | Unit, database and API tests, plus the fake Ollama |
 | `Dockerfile` | Packs the app into an image |
 | `docker-compose.yml` | Starts the app and the database together |
-| `docs/` | Design spec, build plan and hard-testing results (`testing.md`) |
+| `docs/` | Design specs, build plans and hard-testing results (`testing.md`) |
