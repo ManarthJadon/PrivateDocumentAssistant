@@ -139,6 +139,48 @@ def test_ask_when_ollama_is_down_is_503(client, fake):
     assert response.json() == {"detail": "Ollama isn't running. Start it and try again."}
 
 
+# --- past questions ---
+
+def test_ask_saves_the_question(client, fake):
+    workspace_id = make_workspace(client)
+    upload(client, workspace_id, "apples.txt", b"Apples are red.")
+    fake.reply = "They are red [1]."
+
+    client.post(f"/api/workspaces/{workspace_id}/ask", json={"question": "Are apples red?"})
+
+    history = client.get(f"/api/workspaces/{workspace_id}/questions").json()
+    assert [item["question"] for item in history] == ["Are apples red?"]
+    assert history[0]["answer"] == "They are red [1]."
+    assert history[0]["sources"][0]["filename"] == "apples.txt"
+
+
+def test_failed_ask_saves_nothing(client, fake):
+    workspace_id = make_workspace(client)
+    upload(client, workspace_id)
+    fake.down = True  # Ollama stops after the upload
+
+    client.post(f"/api/workspaces/{workspace_id}/ask", json={"question": "Are apples red?"})
+
+    assert client.get(f"/api/workspaces/{workspace_id}/questions").json() == []
+
+
+def test_clear_questions(client, fake):
+    workspace_id = make_workspace(client)
+    upload(client, workspace_id)
+    client.post(f"/api/workspaces/{workspace_id}/ask", json={"question": "Are apples red?"})
+
+    assert client.delete(f"/api/workspaces/{workspace_id}/questions").status_code == 204
+    assert client.get(f"/api/workspaces/{workspace_id}/questions").json() == []
+
+
+@pytest.mark.parametrize("method", ["GET", "DELETE"])
+def test_questions_of_unknown_workspace_is_404(client, method):
+    response = client.request(method, "/api/workspaces/999/questions")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+
+
 # --- deleting ---
 
 def test_delete_document_removes_file(client, tmp_path):
