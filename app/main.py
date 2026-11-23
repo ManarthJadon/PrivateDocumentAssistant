@@ -193,7 +193,26 @@ def delete_document(document_id: int, conn=Depends(get_conn), uploads_dir=Depend
 def ask_question(workspace_id: int, body: QuestionIn, conn=Depends(get_conn), ollama=Depends(get_ollama)):
     question = clean(body.question, 2000, "Please type a question (max 2000 characters).")
     answer = ask(conn, ollama, workspace_id, question)
+    # Only answers that worked are saved: if ask() failed (Ollama off, too slow),
+    # it raised an error above and this line never runs.
+    db.insert_question(conn, workspace_id, question, answer.text, answer.sources, answer.related)
     return {"answer": answer.text, "sources": answer.sources, "related": answer.related}
+
+
+# --- past questions ---
+
+@app.get("/api/workspaces/{workspace_id}/questions")
+def list_questions(workspace_id: int, conn=Depends(get_conn)):
+    if db.get_workspace(conn, workspace_id) is None:
+        raise db.NotFound()
+    return db.list_questions(conn, workspace_id)
+
+
+@app.delete("/api/workspaces/{workspace_id}/questions", status_code=204)
+def clear_questions(workspace_id: int, conn=Depends(get_conn)):
+    if db.get_workspace(conn, workspace_id) is None:
+        raise db.NotFound()
+    db.clear_questions(conn, workspace_id)
 
 
 # --- the web page ---
